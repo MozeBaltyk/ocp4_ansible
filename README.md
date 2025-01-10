@@ -1,5 +1,26 @@
 ## Ansible Playbook for OpenShift 4 and Jinja templates for Bastion/Helper Node setup
 
+### Create VM with OpenTofu
+
+```bash
+MAC_ADDR=$(date +%s | md5sum | head -c 6 | sed -e 's/\([0-9A-Fa-f]\{2\}\)/\1:/g' -e 's/\(.*\):$/\1/' | sed -e 's/^/52:54:00:/';echo);
+
+cd ./libvirt
+tofu init;
+tofu plan -out=terraform.tfplan \
+  -var "hostname={{ hostname }}" \
+  -var "mac_address=${MAC_ADDR}";
+tofu apply "terraform.tfplan";
+
+# Get the ip
+sleep 60
+tofu refresh && tofu output ips;
+
+ssh -i .key.private ansible@<IP>
+
+tofu destroy -auto-approve
+```
+
 Here is the directory structure of all the files in this directory:
 
 ```bash
